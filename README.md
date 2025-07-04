@@ -1,129 +1,154 @@
-Face Verification Using Siamese Neural Network
- 1. Introduction
-This project implements a Siamese Neural Network for face verification, inspired by the research paper "Siamese Neural Networks for One-shot Image Recognition" by Koch et al. It learns a similarity metric between face pairs and is designed to work well in one-shot learning scenarios, generalizing to new, unseen identities without retraining.
+markdown
+# Siamese Neural Network for Face Verification
 
- 2. Problem Statement
-Traditional Face Recognition Limitations:
-Requires large labeled datasets.
+A real-time face verification system built using Siamese Neural Networks with TensorFlow and OpenCV. This system can learn to verify if two face images belong to the same person by computing similarity scores between facial embeddings.
 
-Needs retraining for new identities.
+##  Features
 
- Objective:
-To verify whether two face images belong to the same person using a Siamese Neural Network, even with limited data.
+- **Real-time face verification** using webcam input
+- **Siamese Neural Network architecture** for one-shot learning
+- **Custom data collection** interface for building personalized datasets
+- **Live verification system** with adjustable thresholds
+- **GPU acceleration** support with TensorFlow
 
- 3. Dataset
-Source:
-Labeled Faces in the Wild (LFW) dataset.
+##  Requirements
 
-Structure:
-bash
-Copy
-Edit
-/audio_data/
-    ├── anchor/     # Reference images
-    ├── positive/   # Same identity as anchor
-    └── negative/   # Different identities
-Data Collection:
-Real-time image collection using webcam (OpenCV or sound input for audio-based variant).
 
-🛠️ 4. Methodology
-4.1 Preprocessing
-Resize images to 100x100
+pip install tensorflow>=2.8.0
+pip install opencv-python
+pip install numpy
+pip install matplotlib
+pip install uuid
 
-Normalize pixel values
 
-Split into 70% training / 30% testing
+##  Project Structure
 
-4.2 Model Architecture
-Embedding Network:
 
-CNN that encodes face into fixed-length vector.
+├── data/
+   ├── positive/     
+   ├── negative/         
+├── application_data/
+   ├── input_image/
+   └── verification_images/
+├── training_checkpoints/
+└── siamesemodelv2.h5
 
-Siamese Network:
 
-Two identical embedding networks.
+##  How It Works
 
-Computes L1 distance between embeddings.
+### 1. **Siamese Network Architecture**
 
-Final dense layer with sigmoid activation predicts similarity.
+The model consists of:
+- **Embedding Network**: CNN that extracts 4096-dimensional feature vectors
+  - 4 Convolutional blocks with increasing filter sizes (64→128→128→256)
+  - MaxPooling layers for dimensionality reduction
+  - Dense layer with sigmoid activation for final embeddings
 
-4.3 Training
-Loss: Binary Crossentropy
+- **Distance Layer**: Custom L1 distance calculation between embeddings
+- **Classification Head**: Binary classifier to determine if faces match
 
-Optimizer: Adam
+### 2. **Training Process**
 
-Checkpoints: Saved periodically
+The network learns to:
+- **Minimize distance** between anchor and positive pairs (same person)
+- **Maximize distance** between anchor and negative pairs (different people)
+- Use **binary cross-entropy loss** with Adam optimizer
 
-Metrics: Precision, Recall
+##  Quick Start
 
-4.4 Verification
-Input image compared with a set of reference images.
+### 1. Data Collection
 
-Prediction score above a detection threshold = potential match.
 
-Ratio of matches compared to a verification threshold to confirm identity.
+# Run the data collection script
+# Press 'a' to capture anchor images
+# Press 'p' to capture positive images  
+# Press 'q' to quit
+python collect_data.py
 
- 5. Key Implementation Concepts
-Pairwise Data Construction: Anchor/Positive and Anchor/Negative image pairs.
 
-Custom L1 Distance Layer: Measures similarity between embeddings.
+### 2. Prepare Negative Samples
 
-Efficient Pipeline: TensorFlow tf.data API for loading, preprocessing, batching.
+Download the [LFW dataset](http://vis-www.cs.umass.edu/lfw/) and place it in the project directory. The script will automatically move images to the negative folder.
 
-Real-Time Capture: Webcam integration for live verification.
+### 3. Train the Model
 
-Threshold-Based Decision Making: Adjustable thresholds for tuning FP/FN tradeoff.
 
-Model Checkpointing: Supports reloading and inference using custom layers.
+# Train for 20 epochs
+EPOCHS = 20
+train(train_data, EPOCHS)
 
-6. Experimental Evaluation
-Metrics Evaluated:
 
-Precision
+### 4. Real-time Verification
 
-Recall
 
-Verification Accuracy
+# Run verification system
+# Press 'v' to verify current face
+# Press 'q' to quit
+python verify_face.py
 
-Testing: Performed on unseen identities from the dataset.
 
-7. Results
-Demonstrates strong performance on face verification tasks.
+## ⚙ Configuration
 
-Generalizes well to new/unseen identities with limited data.
+### Verification Thresholds
 
-Outperforms traditional classification methods in low-data settings.
+- **Detection Threshold** (0.5): Minimum similarity score for positive detection
+- **Verification Threshold** (0.5): Proportion of positive detections required for verification
 
-8. Discussion
-Strengths:
-Works well with few samples.
+### Model Parameters
 
-Generalizes without retraining.
+- **Input Size**: 100×100×3 RGB images
+- **Batch Size**: 16
+- **Learning Rate**: 1e-4
+- **Embedding Dimension**: 4096
 
-Real-world deployment ready.
+##  Model Performance
 
-⚠ Limitations:
-Depends on diversity and quality of dataset.
+The model uses precision and recall metrics during training:
+- **Precision**: Accuracy of positive predictions
+- **Recall**: Coverage of actual positive cases
 
-Real-time verification can be slow on low-end hardware.
+##  Customization
 
-9. Related Work
-Koch et al. “Siamese Neural Networks for One-shot Image Recognition”
+### Adjust Network Architecture
 
-Applications in:
 
-Signature verification
+def make_embedding():
+    # Modify layers, filters, or dimensions
+    inp = Input(shape=(100,100,3), name='input_image')
+    # Add/remove layers as needed
+    return Model(inputs=[inp], outputs=[d1], name='embedding')
 
-Fraud detection
 
-Object re-identification
+### Modify Verification Logic
 
-10. Future Work
-Explore Triplet Loss or Contrastive Loss
 
-Use Data Augmentation
+def verify(model, detection_threshold, verification_threshold):
+    # Adjust thresholds based on your requirements
+    # detection_threshold: 0.1-0.9 (lower = more lenient)
+    # verification_threshold: 0.1-0.9 (lower = easier verification)
 
-Improve Inference Speed for real-time systems
 
-11. Conclusion
-Siamese Neural Networks offer an elegant and efficient solution for face verification in real-world, low-data scenarios. This project demonstrates its potential for scalable, one-shot learning applications, combining robustness, adaptability, and simplicity.
+##  Use Cases
+
+- **Access Control Systems**
+- **Identity Verification**
+- **Security Applications**
+- **Attendance Systems**
+- **Personal Photo Organization**
+
+##  Important Notes
+
+1. **Data Quality**: Ensure good lighting and clear face visibility during data collection
+2. **Dataset Balance**: Collect similar numbers of anchor and positive samples
+3. **GPU Memory**: The script includes GPU memory growth configuration for optimal performance
+4. **Model Saving**: Model is saved as 'siamesemodelv2.h5' with custom objects
+
+##  Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+
